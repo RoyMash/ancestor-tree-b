@@ -5,7 +5,7 @@ using namespace family;
 
 static node GetNewNode(string name, int depth, gender family_role)
 {
-	node newMember = new struct tree_node(depth + 1, family_role);
+	node newMember = new struct tree_node(depth, family_role);
 	newMember->name = name;
 	newMember->mother = newMember->father = NULL;
 	return newMember;
@@ -42,11 +42,11 @@ Tree Tree::addFather(string child, string father_name)
 {
 
 	node CurrRoot = findByName(this->root, child);
-	if(CurrRoot->father != nullptr){
+	if(CurrRoot->father){
         throw "Father is already exist.\n";
 	}
 	else {
-        CurrRoot->father = GetNewNode(father_name, CurrRoot->depth, FATHER);
+        CurrRoot->father = GetNewNode(father_name, CurrRoot->depth +1, FATHER);
     }
 	return * this;
 }
@@ -54,11 +54,11 @@ Tree Tree::addFather(string child, string father_name)
 Tree Tree::addMother(string child, string mother_name)
 {
 	node CurrRoot = findByName(this->root, child);
-    if(CurrRoot->mother != nullptr){
+    if(CurrRoot->mother){
         throw "Mother is already exist.\n";
     }
     else {
-        CurrRoot->mother = GetNewNode(mother_name, CurrRoot->depth, MOTHER);
+        CurrRoot->mother = GetNewNode(mother_name, CurrRoot->depth + 1, MOTHER);
     }
 	return * this;
 }
@@ -108,7 +108,7 @@ static string nodeToString(node root)
 	if (root->depth == 0)
 		return "me";
 
-	if (root->depth == 2)
+	if (root->depth == 1)
 	{
 		if (root->family_role == FATHER)
 			return "father";
@@ -121,7 +121,7 @@ static string nodeToString(node root)
 		if (root->family_role == FATHER)
 			greatSum = "grandfather";
 
-		for (int i = 0; i <= root->depth - 4; i++)
+		for (int i = 0; i <= root->depth - 3; i++)
 			greatSum = "great-" + greatSum;
 
 		return greatSum;
@@ -130,7 +130,6 @@ static string nodeToString(node root)
 string Tree::relation(string family_member_name)
 {
 	node temp = findRelation(this->root, family_member_name);
-
 	return nodeToString(temp);
 }
 
