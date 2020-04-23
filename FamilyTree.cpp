@@ -3,12 +3,20 @@
 #include "FamilyTree.hpp"
 using namespace family;
 
-static node GetNewNode(string name, int depth, gender family_role)
-{
-	node newMember = new struct tree_node(depth, family_role);
-	newMember->name = name;
-	newMember->mother = newMember->father = NULL;
-	return newMember;
+Tree* GetNewNode (Tree* Tree_P, string child_name){
+    if (Tree_P->name==child_name)  return Tree_P;
+
+    if (Tree_P->father){
+        Tree* requested_root = GetNewNode(Tree_P->father, child_name);
+        if(requested_root != nullptr) return requested_root;
+    }
+
+    if (Tree_P->mother){
+        Tree* requested_root = GetNewNode(Tree_P->mother, child_name);
+        if(requested_root) return requested_root;
+    }
+
+    return nullptr;
 }
 
 Tree::Tree(string name)
