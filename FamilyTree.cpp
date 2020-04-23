@@ -1,232 +1,176 @@
-#include <iostream>
-#include <list>
 #include "FamilyTree.hpp"
+#include <iostream>
+#include <exception>
+using namespace std;
 using namespace family;
 
-Tree* GetNewNode (Tree* Tree_P, string child_name){
-    if (Tree_P->name==child_name)  return Tree_P;
+Tree* GetNewNode(Tree *Tree_P, string child_name)
+{
+    if (Tree_P->name == child_name) return Tree_P;
 
-    if (Tree_P->father){
-        Tree* requested_root = GetNewNode(Tree_P->father, child_name);
-        if(requested_root != nullptr) return requested_root;
+    if (Tree_P->father)
+    {
+        Tree *requested_root = GetNewNode(Tree_P->father, child_name);
+        if (requested_root != nullptr) return requested_root;
     }
 
-    if (Tree_P->mother){
-        Tree* requested_root = GetNewNode(Tree_P->mother, child_name);
-        if(requested_root) return requested_root;
+    if (Tree_P->mother)
+    {
+        Tree *requested_root = GetNewNode(Tree_P->mother, child_name);
+        if (requested_root) return requested_root;
     }
 
     return nullptr;
 }
 
-Tree::Tree(string name)
+Tree &Tree::addFather(string name, string father_name)
 {
-	root = GetNewNode(name, 0, SELF);
-}
-
-tree_node::tree_node(int depth, gender family_role)
-{
-	this->depth = depth;
-	this->family_role = family_role;
-}
-
-static node findByName(node root, string name)
-{
-	if (!root)
-		return NULL;
-
-	if (root->name == name)
-		return root;
-	node temp = findByName(root->father, name);
-
-	if (temp)
-		return temp;
-
-	return findByName(root->mother, name);
-
-}
-
-Tree Tree::addFather(string child, string father_name)
-{
-
-	node CurrRoot = findByName(this->root, child);
-	if(CurrRoot->father){
-        throw "Father already exists \n";
-	}
-	else {
-        CurrRoot->father = GetNewNode(father_name, CurrRoot->depth +1, FATHER);
+    Tree *Tree_P = GetNewNode(this, name);
+    if (Tree_P)
+    {
+        if (!Tree_P->father)
+        {
+            Tree_P->father = new Tree(father_name);
+            Tree_P->father->self = Tree_P;
+            //if's for the relation
+            if (Tree_P->relate == "me") Tree_P->father->relate = "father";
+            else if (Tree_P->relate == "father" || Tree_P->relate == "mother") Tree_P->father->relate = "grandfather";
+            else if (Tree_P->relate == "grandfather" || Tree_P->relate == "grandmother") Tree_P->father->relate = "great-grandfather";
+            else
+            {
+                string temp = "great-" + Tree_P->relate;
+                for (int j = 0; j < 6; j++) temp.pop_back();
+                temp += "father";
+                Tree_P->father->relate = temp;
+            }
+            Tree *ans = this;
+            return * ans;
+        }
+        else
+        {
+            throw runtime_error(name + " already has a father !");
+        }
     }
-	return * this;
+    else
+    {
+        throw runtime_error(name + " is not in the tree");
+    }
 }
 
-Tree Tree::addMother(string child, string mother_name)
+Tree &Tree::addMother(string name, string mother_name)
 {
-	node CurrRoot = findByName(this->root, child);
-    if(CurrRoot->mother){
-        throw "Mother already exists.\n";
+    Tree *Tree_P = GetNewNode(this, name);
+    if (Tree_P)
+    {
+        if (!Tree_P->mother)
+        {
+            Tree_P->mother = new Tree(mother_name);
+            Tree_P->mother->self = Tree_P;
+            //if's for the relation
+            if (Tree_P->relate == "me") Tree_P->mother->relate = "mother";
+            else if (Tree_P->relate == "mother" || Tree_P->relate == "father") Tree_P->mother->relate = "grandmother";
+            else if (Tree_P->relate == "grandmother" || Tree_P->relate == "grandfather") Tree_P->mother->relate = "great-grandmother";
+            else
+            {
+                string temp = "great-" + Tree_P->relate;
+                for (int j = 0; j < 6; j++) temp.pop_back();
+                temp += "mother";
+                Tree_P->mother->relate = temp;
+            }
+            Tree *ans = this;
+            return * ans;
+        }
+        else
+        {
+            throw runtime_error(name + " already has a mother !");
+        }
     }
-    else {
-        CurrRoot->mother = GetNewNode(mother_name, CurrRoot->depth + 1, MOTHER);
+    else
+    {
+        throw runtime_error(name + " is not in the tree");
     }
-	return * this;
 }
 
-void prettyprint(node root)	//wrapper func
+string Tree::relation(string family_member_name)
 {
-	if (!root)
-		return;
+    Tree *Tree_P = GetNewNode(this, family_member_name);
+    if (Tree_P)
+        return Tree_P->relate;
+    return "unrelated";
+}
 
-	prettyprint(root->mother);
+void beautyPrint(Tree *Tree_P, int space)
+{
+    if (!Tree_P) return;
+    space += 6;	// Increase distance between levels
 
-	for (int i = 0; i < root->depth - 1; i++)
-		std::cout << "        ";
-
-	std::cout << root->name << "\n\n";
-
-	prettyprint(root->father);
-
+    beautyPrint(Tree_P->father, space);
+    cout << endl;
+    for (int i = 10; i < space; i++)
+        cout << " ";
+    cout << Tree_P->name << "\n";
+    beautyPrint(Tree_P->mother, space);	// Process mother node
 }
 
 void Tree::display()
 {
-	prettyprint(this->root);
+    //
+    beautyPrint(this, 0);
 }
 
-static node findRelation(node root, string family_member_name)
+Tree* findRecursive(Tree *Tree_P, string str)
 {
-	if (!root)
-		return NULL;
-
-	if (root->name == family_member_name)
-		return root;
-
-	node tempNode = findRelation(root->father, family_member_name);
-
-	if (tempNode)
-		return tempNode;
-
-	return findRelation(root->mother, family_member_name);
-}
-
-static string nodeToString(node root)
-{
-	if (!root)
-		return "unrelated";
-
-	if (root->depth == 0)
-		return "me";
-
-	if (root->depth == 1)
-	{
-		if (root->family_role == FATHER)
-			return "father";
-		return "mother";
-	}
-	else
-	{
-		string greatSum = "grandmother";
-
-		if (root->family_role == FATHER)
-			greatSum = "grandfather";
-
-		for (int i = 0; i <= root->depth - 3; i++)
-			greatSum = "great-" + greatSum;
-
-		return greatSum;
-	}
-}
-string Tree::relation(string family_member_name)
-{
-	node temp = findRelation(this->root, family_member_name);
-	return nodeToString(temp);
-}
-
-static void deleteSubTree(node CurrRoot)
-{
-	if (CurrRoot == NULL)
-		return;
-
-	//Delete above subtrees//
-	deleteSubTree(CurrRoot->mother);
-	deleteSubTree(CurrRoot->father);
-	CurrRoot->mother = CurrRoot->father = NULL;
-	//Delete the required node itself
-	cout << "\n deleting " << CurrRoot->name << " from the tree\n";
-
-	delete(CurrRoot);
-
-}
-
-void Tree::remove(string removeAbove)
-{
-    if(findByName(this->root, removeAbove) == NULL){
-        throw invalid_argument(removeAbove + " wasn't found");
+    if (Tree_P->relate == str)
+    {
+        return Tree_P;
     }
-    else{
-        deleteSubTree(findByName(this->root, removeAbove));
+    if (Tree_P->father)
+    {
+        Tree *ans = findRecursive(Tree_P->father, str);
+        if (ans != nullptr) return ans;
     }
-}
-
-node findByRole(node root, string family_role)
-{
-	if (!root)
-		return NULL;
-
-	if (nodeToString(root) == family_role)
-		return root;
-
-	node temp = findByRole(root->father, family_role);
-
-	if (temp)
-		return temp;
-
-	temp = findByRole(root->mother, family_role);
-
-		return temp;
-
-}
-
-static bool role_validator(string family_role)
-{
-	int len = family_role.length();
-	std::string familyRoles[5]
-	{
-		"me", "mother", "father", "grandmother", "grandfather" };
-
-	if (len == 6 || len == 11 || len == 2)
-	{
-		for (string val: familyRoles)
-		{
-			if (family_role == val)
-				return true;
-		}
-	}
-	if ((len - 11) % 6 == 0 && len >= 17)	//great- cases
-	{
-		string gr = "";
-		for (int i = 1; i <= (len - 11) / 6; i++)	//"great-" amount for this length of a string
-			gr = gr + "great-";
-
-		if (family_role == (gr + "grandfather") || family_role == (gr + "grandmother"))
-			return true;
-	}
-
-	return false;
-
+    if (Tree_P->mother)
+    {
+        Tree *ans = findRecursive(Tree_P->mother, str);
+        if (ans) return ans;
+    }
+    return nullptr;
 }
 
 string Tree::find(string family_role)
 {
-	if (!role_validator(family_role))
-		throw std::invalid_argument("The tree cannot handle the '" + family_role + "' relation");
+    Tree *Tree_P = findRecursive(this, family_role);
+    if (Tree_P)
+    {
+        return Tree_P->name;
+    }
+    else
+    {
+        throw runtime_error("The tree cannot handle the '" + family_role + "' relation");
+    }
+}
 
-	if (family_role == "me" && root)
-		return this->root->name;
-
-	node result = findByRole(this->root, family_role);
-
-	if (result)
-			return result->name;
-
-	return "unrelated";
+void Tree::remove(string family_member_name)
+{
+    Tree *Tree_P = GetNewNode(this, family_member_name);
+    if (Tree_P == this)
+    {
+        throw runtime_error("Can't remove the root of the tree (aka -> me");
+    }
+    if (Tree_P)
+    {
+        if (Tree_P->self->mother == Tree_P)
+        {
+            Tree_P->self->mother = nullptr;
+        }
+        if (Tree_P->self->father == Tree_P)
+        {
+            Tree_P->self->father = nullptr;
+        }
+        delete Tree_P;
+    }
+    else
+    {
+        throw runtime_error(family_member_name + " is not in the tree");
+    }
 }
