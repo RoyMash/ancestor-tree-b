@@ -51,7 +51,7 @@ Tree Tree::addFather(string child, string father_name)
 
 	node CurrRoot = findByName(this->root, child);
 	if(CurrRoot->father){
-        throw "Father is already exist.\n";
+        throw "Father already exists \n";
 	}
 	else {
         CurrRoot->father = GetNewNode(father_name, CurrRoot->depth +1, FATHER);
@@ -63,7 +63,7 @@ Tree Tree::addMother(string child, string mother_name)
 {
 	node CurrRoot = findByName(this->root, child);
     if(CurrRoot->mother){
-        throw "Mother is already exist.\n";
+        throw "Mother already exists.\n";
     }
     else {
         CurrRoot->mother = GetNewNode(mother_name, CurrRoot->depth + 1, MOTHER);
