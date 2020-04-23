@@ -8,7 +8,7 @@ namespace family
 	public:
 	
 	  	string name , relate;
-	   	Tree *father , *mother;
+	   	Tree *father , *mother , *self;
 
         // constructor
 		Tree(string n): 
